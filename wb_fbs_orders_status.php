@@ -18,10 +18,8 @@ foreach ($sellers as $seller) {
 
     // запрос к бд
     $sellerId = $seller['id'];
-    $sql = "SELECT id,t.supplierStatus,t.sellerId 
-            FROM practice.wildberries_fbs_orders t 
-            WHERE ((t.wbStatus not in ('canceled_by_client','defect','sold','declined_by_client')) or (t.supplierStatus is null))
-            and t.sellerId = $sellerId;";
+    $sql = "SELECT * FROM v_wb_fbs_orders_to_update_status
+            WHERE sellerId = $sellerId;";
     $result = $mysqli->query($sql);
 
     $orders = array();

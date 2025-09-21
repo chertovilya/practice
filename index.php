@@ -19,12 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!preg_match('/^\d+$/', $barcode)) {
         $message = "Штрихкод должен содержать только цифры.";
     } else {
-        $sql = "SELECT CAST(id AS CHAR) as id,article,createdAt,t.skus,t.sellerId
-                from practice.wildberries_fbs_orders t 
-                where t.supplierStatus  = 'new' and t.wbStatus = 'waiting'
-                and t.skus = '$barcode'
-                order by t.createdAt
-                limit 1;";
+        $sql = "SELECT * FROM `v_wb_fbs_orders_to_confirm`
+                WHERE skus = '$barcode'
+                LIMIT 1;";
         $result = $mysqli->query($sql);
         $row = mysqli_fetch_assoc($result);
 
@@ -39,23 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message .= "</BR>";
             $message .= "Артикул: " . htmlspecialchars($row['article']) . "\n";
             $message .= "</BR>";
-            $message .= "Кабинет: " . htmlspecialchars($row['sellerId']) . "\n";
+            $message .= "Кабинет: " . htmlspecialchars($row['seller']) . "\n";
             $message .= "</BR>";
 
             $orderId = $row['id'];
             $sellerId = $row['sellerId'];
 
-            $sql = "SELECT
-                    s.id, s.createdAt, s.done, o.supplierStatus, wfs.apiKey,
-                    COUNT(o.article) as cnt
-                    FROM wildberries_fbs_supplies s
-                    left join wildberries_fbs_orders o on s.id = o.supplyId  
-                    left join wildberries_fbs_sellers wfs on s.sellerId = wfs.id 
-                    where o.article is not null and s.done <> '1' and o.sellerId = $sellerId
-                    group by 
-                    s.id, s.createdAt, s.done, o.supplierStatus, wfs.apiKey 
-                    order by s.createdAt desc
-                    limit 1;";
+            $sql = "SELECT * FROM v_wb_fbs_supply_for_orders_confirm
+                    WHERE sellerId = $sellerId
+                    LIMIT 1;";
             $result = $mysqli->query($sql);
             $row = mysqli_fetch_assoc($result);
             $supplyId = $row['id'];
